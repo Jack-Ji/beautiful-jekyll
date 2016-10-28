@@ -1,6 +1,7 @@
 ---
 layout: post
 title: Scheme语言-Chapter 1-介绍
+bigimg: /img/John-McCarthy.jpg
 tags: [scheme]
 ---
 

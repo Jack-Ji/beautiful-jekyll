@@ -77,10 +77,10 @@ url-pretty: "Jack's Territory"  # eg. "deanattali.com/beautiful-jekyll"
 
 # --- Misc --- #
 # Fill in your Disqus shortname (NOT the userid) if you want to support Disqus comments
-#disqus: ""
+#disqus: "jack-ji"
 
 # Fill in your Google Analytics ID to track your website using GA
-#google_analytics: ""
+google_analytics: "UA-86403373-1"
 
 # Facebook App ID
 # fb_app_id: ""
