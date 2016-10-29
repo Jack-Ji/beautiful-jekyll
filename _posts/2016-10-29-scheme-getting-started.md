@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Scheme语言-Chapter 2-起步
-bigimg: /img/nice-view1.png
+bigimg: /img/John-McCarthy.jpg
 tags: [scheme]
 ---
 
