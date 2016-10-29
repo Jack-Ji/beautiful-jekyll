@@ -280,7 +280,7 @@ Scheme使用`dotted-pair`写法来表示一个不是list的pair，具体做法�
 `arg1 ... argn`代表参数。一种可能的求值过程如下（可能跟你所想的差不多）：
 
 * 计算`procedure`的值；
-* 计算`arg1`的值；
+* 计算`arg1`的值；  
 ...
 * 计算`argn`的值；
 * 将计算得出的值传递给`procedure`；
