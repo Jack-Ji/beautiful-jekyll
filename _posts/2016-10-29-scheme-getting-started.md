@@ -273,8 +273,6 @@ Scheme使用`dotted-pair`写法来表示一个不是list的pair，具体做法�
 
 第6章节会介绍更多list的操作函数，感兴趣的读者可以提前跳过去学习。
 
-#### [习题及解答](https://github.com/jack-ji/scheme-ex/blob/master/tspl/2-2.ss)
-
 ## Scheme表达式的求值过程
 
 下面我们讨论Scheme对表达式进行求值的过程。之前我们已经明确过常量对象的值是它本身，例如字符串和数字。
@@ -309,3 +307,5 @@ Scheme使用`dotted-pair`写法来表示一个不是list的pair，具体做法�
    例如：表达式`((car (list + - * /)) 2 3)`所做的事情其实就是将2和3相加，`(car (list + - * /))`就代表了`+`操作符；
 
 ## 变量和`let`表达式
+
+## [习题及解答](https://github.com/jack-ji/scheme-ex/blob/master/tspl/2-2.ss)
