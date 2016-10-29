@@ -144,7 +144,7 @@ Scheme中的所有操作表达式均采用了前缀写法，无论一个操作�
 ```
 
 了解了以上内容，你已经可以将Scheme当做一个标准的计算器来使用了！
-更多的高级运算函数，如开方、三角函数、log运算等会在后续章节中统一介绍。
+更多的高级运算函数，如开方、三角函数、log运算等会在第6章中统一介绍，当然你也可以提前尝试运行看看效果：）。
 
 尽管我们可以使用简单的数字运算完成很多工作，偶尔我们还是需要能保存多个值的复合数据类型。
 在很多其它编程语言中，最基本的符合数据类型是数组。而Scheme中最基本的符合类型则是list。
@@ -167,7 +167,7 @@ list可以包含不同类型的数据，例如`(4.2 "hi")`就是一个包含数�
 
 使用`quote`可以使Scheme将某个list看作为数据。如果将上面代码中的`quote`去掉，前两条表达式会抛出异常，最后一条会给出错误结果`7`。
 
-由于`quote`的使用频率相当高，Scheme专门为其提供了一种简写方式：在list前面添加单引号：
+由于`quote`的使用频率相当高，Scheme专门为其提供了一种简写方式：在list前面添加单引号。
 
 ```
 '(1 2 3 4) => (1 2 3 4)
@@ -223,7 +223,56 @@ hello必须被引用才会被Scheme看作为符号，否则Scheme会将其看作
 (cdr '((a b) (c d))) => ((c d))
 ```
 
-list的第一个元素通常被称为`list的car`，而list剩下的部分则被称为`list的cdr`。只要一个元素的list的cdr是空list。
+list的第一个元素通常被称为`list的car`，而list剩下的部分则被称为`list的cdr`。只有一个元素的list的cdr是空list。
 
+函数`cons`可用来构建list，它接受两个参数，在第二个参数是list的情况下该函数会返回新创建的list。
+
+```
+(cons 'a '()) => (a)
+(cons 'a '(b c)) => (a b c)
+(cons 'a (cons 'b (cons 'c '()))) => (a b c)
+(cons '(a b) '(c d)) => ((a b) c d)
+
+(car (cons 'a '(b c))) => a
+(cdr (cons 'a '(b c))) => (b c)
+(cons (car '(a b c))
+      (cdr '(d e f))) => (a e f)
+```
+
+实际上`cons`的第二个参数并非一定要list类型，`cons`的功能是将两个值组合成为一个`pair`（一对数据的简称），
+而Scheme并没有规定`pair`的第二个元素（也就是`cdr`）必须是list！
+一个list实际上就是多个`pair`构成的序列，其中每个`pair`的`cdr`都指向序列中的下一个`pair`。
 
 ![list表示](../img/tspl/list-1.png)
+
+可以看到，以上序列的最后一个`pair`的`cdr`是空list，这是该序列构成一个合法list的必要条件。
+更为正式的讲，空list或者任何`cdr`为list的`pair`都是合法的list。
+
+Scheme使用`dotted-pair`写法来表示一个不是list的pair，具体做法就是在最后一个元素的前面加一个`.`。
+
+```
+(cons 'a 'b) => (a . b)
+(cdr '(a . b)) => b
+(cons 'a '(b . c)) => (a b . c)
+```
+
+实际上合法的list也可以使用`dotted-pair`表示法，只不过Scheme总会将其转换为正式的list表示。
+
+```
+'(a . (b . (c . ()))) => (a b c)
+'(a b c . ()) => (a b c)
+```
+
+函数`list`的作用与`cons`类似，不过它可以接受任意数目的参数，并且总是返回合法的list。
+
+```
+(list 'a 'b 'c) => (a b c)
+(list 'a) => (a)
+(list) => ()
+```
+
+第6章节会介绍更多list的操作函数，感兴趣的读者可以提前跳过去学习。
+
+#### [习题及解答](https://github.com/jack-ji/scheme-ex/tspl/2-2.ss)
+
+## Scheme表达式的求值过程
