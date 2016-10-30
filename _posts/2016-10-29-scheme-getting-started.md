@@ -525,4 +525,125 @@ Scheme开发者在编写`let`的变量绑定字句时经常使用方括号替代
     (h 'a 'b 'c 'd)) => (a b (c d))
 ```
 
+## 顶层定义
+
+无论是通过`let`表达式还是通过`lambda`表达式绑定的变量，它们在各自的正文之外是不可见的。
+假设你有个数据或者函数需要在程序的很多地方使用，就像`+`和`cons`一样，该怎么做呢？
+其实我们在前面的实例中已经用到了这个技术，那就是`define`表达式，我们也称之为`顶层定义语句`。
+使用`define`定义的变量在整个程序中都是可见的，除非被内层的变量绑定语句屏蔽了。
+
+下面让我们在顶层创建一个函数：
+
+```
+(define double-any
+    (lambda (f x) (f x x)))
+```
+
+现在变量`double-any`和`cons`一样可在程序的任何地方使用了。事实上，当我们使用它时感觉跟其它内建函数没什么差别。
+
+```
+(double-any + 10) => 20
+(double-any cons 'a) => (a . a)
+```
+
+`define`表达式不止可以创建函数，也可以用来定义其它类型的变量；
+
+```
+(define sandwich "peanut-buffer-and-jelly")
+
+sandwich => "peanut-buffer-and-jelly"
+```
+
+尽管如此，`define`表达式最常见的用途是定义函数。
+
+上面已经提到了，`define`表达式定义的变量可以被`let`和`lambda`表达式的变量绑定语句屏蔽掉。
+
+```
+(define xyz '(x y z))
+
+(let ([xyz '(z y x)])
+    xyz) => (z y x)
+```
+
+你可以将`define`想象成一个`let`表达式，它包围了所有与其相同层次的Scheme语句：）。
+
+下面让我们尝试实现Scheme支持的`car`和`cdr`的组合函数：`cadr`和`cddr`，
+`(cadr list)`等同于`(car (cdr list))`，`(cddr list)`等同于`(cdr (cdr list))`：
+
+```
+(define cadr
+    (lambda (x)
+        (car (cdr x))))
+
+(define cddr
+    (lambda (x)
+        (cdr (cdr x))))
+
+(cadr '(a b c)) => b
+(cddr '(a b c)) => (c)
+```
+
+使用`define`和`lambda`定义函数的表达式可以被简化，三种`lambda`参数形态的简化方式分别如下：
+
+```
+(define var0
+    (lambda (var1 ... varn)
+        e1 e2 ...))
+=> (define (var0 var1 ... varn)
+       e1 e2 ...)
+
+(define var0
+    (lambda varr e1 e2 ...))
+=> (define (var0 . varr)
+       e1 e2 ...)
+
+(define var0
+    (lambda (var1 ... varn . varr)
+        e1 e2 ...)
+=> (define (var0 var1 ... varn . varr)
+       e1 e2 ...)
+```
+
+例如，`cadr`和`list`函数的定义的简写方式如下：
+
+```
+(define (cadr x)
+    (car (cdr x)))
+
+(define (list . x) x)
+```
+
+本文对这种简写方式用得不多，主要原因是这种写法体现不出“`函数也是数据对象`”这一重要思想，尽管它可以使程序篇幅稍稍简短一点。
+
+如果你使用了没有被`let`、`lambda`或`define`表达式绑定的变量，会发生什么呢？
+尝试一下运行下面的表达式：
+
+```
+(i-am-not-defined 3)
+```
+
+大部分Scheme实现都会在对上面的表达式求值时抛出异常并警告你变量`i-am-not-defined`未被绑定。
+
+那么是不是只要使用未被绑定的变量就一定会出错呢？未必如此。
+
+```
+(define proc1
+    (lambda (x y)
+        (proc2 x y)))
+```
+
+以上代码在`lambda`表达式内部使用了一个自由变量`proc2`，该变量从未被绑定过。
+Scheme对这种写法是不会报错的，因为在Scheme看来你可能会在未来某个时候定义变量`proc2`。
+当然了，如果你在没有定义变量`proc2`的情况下就调用`proc1`，Scheme还是会报错并提示你变量`proc2`未被绑定。
+
+```
+(define proc2 cons)
+(proc1 'a 'b)   (b . a)
+```
+
+通过这种方式，你能够以任意顺序来定义函数。尤其是当你需要将某个源代码文件中大量的函数定义排列成可读性较高的顺序时。
+除此以外，这还能解决两个函数互为依赖的问题，我们会在后面见到这样的例子。
+
+## 条件判断表达式
+
 ## [习题及解答](https://github.com/jack-ji/scheme-ex/blob/master/tspl/2-2.ss)
