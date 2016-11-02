@@ -30,7 +30,7 @@ Scheme的交互环境基于“read-evaluate-print”循环，这个循环机制�
 
 下面给出了更多示例，`=>`后面给出了Scheme对每个表达式进行计算的结果，我们会在后面描述各种表达式的具体含义。
 
-```
+```scheme
 "hello" => "hello"
 42 => 42
 22/7 => 22/7
@@ -43,7 +43,7 @@ Scheme的交互环境基于“read-evaluate-print”循环，这个循环机制�
 
 下面是更多的示例，你可以尝试猜一下各个表达式的含义，然后继续阅读看看你想得是否正确：）。
 
-```
+```scheme
 (car '(a b c)) => a
 (cdr '(a b c)) => (b c)
 (cons 'a '(b c)) => (a b c)
@@ -67,7 +67,7 @@ Scheme的交互环境基于“read-evaluate-print”循环，这个循环机制�
 
 下面我们尝试调用`square`函数：
 
-```
+```scheme
 (square 5) => 25
 (square -200) => 40000
 (square 0.5) => 0.25
@@ -87,7 +87,7 @@ Scheme的交互环境基于“read-evaluate-print”循环，这个循环机制�
 函数`reciprocal`的功能是给定某个数`n`，返回值`1/n`。如果`n`的值为0，则返回字符串`"oops!"`。
 下面我们通过`load`函数加载文件并对函数进行测试：
 
-```
+```scheme
 (load "reciprocal.ss")
 
 (reciprocal 10) => 1/10
@@ -107,7 +107,7 @@ Scheme中最简单的表达式是常量数据对象，例如：字符串、数�
 现在让我们进一步深入了解数字。首先，数字是常量，当你向Scheme输入数字时，它会将数字原原本本的返还给你。
 下面给出了Scheme支持的几种数字类型的写法：
 
-```
+```scheme
 1231281249172381 => 1231281249172381
 3/4 => 3/4
 2.718901293 => 2.718901293
@@ -121,7 +121,7 @@ Scheme中的数字种类有整数、有理数、实数和复数，每种数字�
 
 Scheme提供了4种基本运算操作符+、-、*、/，分别对应加法、减法、乘法和除法运算。下面是使用运算符的实例：
 
-```
+```scheme
 (+ 1/2 1/2) => 1
 (- 1.5 1/2) => 1.0
 
@@ -135,7 +135,7 @@ Scheme中的所有操作表达式均采用了前缀写法，无论一个操作�
 操作符/函数调用是可以被嵌套到一起的，最内层的操作符/函数调用会首先被处理，然后其返回结果会被作为外层调用的参数，以此类推。
 下面是利用嵌套方式进行的稍复杂点的运算：
 
-```
+```scheme
 (+ (+ 2 2) (+ 2 2)) => 8
 (- 2 (* 4 1/3)) => 2/3
 (* 2 (* 2 (* 2 (* 2 2)))) => 32
@@ -158,7 +158,7 @@ list可以包含不同类型的数据，例如`(4.2 "hi")`就是一个包含数�
 很遗憾，没那么简单。假如我们有一个list的元素是`(+ 3 4)`，上面的方法就行不通了。
 真正的答案是必须由我们自己来告诉Scheme某个list是数据还是调用语句。我们通过`quote`操作符来实现这一点：
 
-```
+```scheme
 (quote (1 2 3 4 5)) => (1 2 3 4 5)
 (quote ("This" "is" "a" "list")) => ("This" "is" "a" "list")
 (quote (+ 3 4)) => (+ 3 4)
@@ -168,7 +168,7 @@ list可以包含不同类型的数据，例如`(4.2 "hi")`就是一个包含数�
 
 由于`quote`的使用频率相当高，Scheme专门为其提供了一种简写方式：在list前面添加单引号。
 
-```
+```scheme
 '(1 2 3 4) => (1 2 3 4)
 '((1 2) (3 4)) => ((1 2) (3 4))
 '(/ (* 2 -1) 3) => (/ (* 2 -1) 3)
@@ -181,7 +181,7 @@ Scheme还有其它特殊表达式，每个都有其特殊的含义和求值方�
 
 `quote`不仅可以引用list，看下面的表达式（请尝试不用quote看看结果）：
 
-```
+```scheme
 (quote hello) => hello
 ```
 
@@ -197,7 +197,7 @@ hello必须被引用才会被Scheme看作为符号，否则Scheme会将其看作
 
 数字和字符串也可以被引用：
 
-```
+```scheme
 '2 => 2
 '2/3 => 2/3
 (quote "Hi Mom!") => "Hi Mom!"
@@ -210,7 +210,7 @@ hello必须被引用才会被Scheme看作为符号，否则Scheme会将其看作
 `car`和`cdr`这两个奇怪的名字来自于第一台实现了Lisp的机器——IBM 704，感兴趣的可去google。
 `car`和`cdr`的参数都必须是非空的list：
 
-```
+```scheme
 (car '(a b c)) => a
 (cdr '(a b c)) => (b c)
 (cdr '(a)) => ()
@@ -226,7 +226,7 @@ list的第一个元素通常被称为`list的car`，而list剩下的部分则被
 
 函数`cons`可用来构建list，它接受两个参数，在第二个参数是list的情况下该函数会返回新创建的list。
 
-```
+```scheme
 (cons 'a '()) => (a)
 (cons 'a '(b c)) => (a b c)
 (cons 'a (cons 'b (cons 'c '()))) => (a b c)
@@ -249,7 +249,7 @@ list的第一个元素通常被称为`list的car`，而list剩下的部分则被
 
 Scheme使用`dotted-pair`写法来表示一个不是list的pair，具体做法就是在最后一个元素的前面加一个`.`。
 
-```
+```scheme
 (cons 'a 'b) => (a . b)
 (cdr '(a . b)) => b
 (cons 'a '(b . c)) => (a b . c)
@@ -257,14 +257,14 @@ Scheme使用`dotted-pair`写法来表示一个不是list的pair，具体做法�
 
 实际上合法的list也可以使用`dotted-pair`表示法，只不过Scheme总会将其转换为正式的list表示。
 
-```
+```scheme
 '(a . (b . (c . ()))) => (a b c)
 '(a b c . ()) => (a b c)
 ```
 
 函数`list`的作用与`cons`类似，不过它可以接受任意数目的参数，并且总是返回合法的list。
 
-```
+```scheme
 (list 'a 'b 'c) => (a b c)
 (list 'a) => (a)
 (list) => ()
@@ -312,7 +312,7 @@ Scheme使用`dotted-pair`写法来表示一个不是list的pair，具体做法�
 例如，我们可能需要在计算`(+ x 3)`之前先将`x`设置成2；又或者我们需要在计算`(+ 2 y)`之前先将`y`设置成3。
 下面展示如何通过Scheme的`let`语句达到上述目的：
 
-```
+```scheme
 (let ((x 2))
     (+ x 3)) => 5
 
@@ -334,7 +334,7 @@ Scheme使用`dotted-pair`写法来表示一个不是list的pair，具体做法�
 
 `let`语句也经常被用于提前计算一些公共表达式，以避免这些表达式被重复计算，从而降低程序效率。
 
-```
+```scheme
 (+ (* 4 4) (* 4 4)) => 32
 
 (let ((a (* 4 4)))
@@ -343,7 +343,7 @@ Scheme使用`dotted-pair`写法来表示一个不是list的pair，具体做法�
 
 Scheme开发者在编写`let`的变量绑定字句时经常使用方括号替代圆括号，这样可以使程序结构更加清晰。
 
-```
+```scheme
 (let ([list1 '(a b c)] [list2 '(d e f)])
     (cons (cons (car list1)
                 (car list2))
@@ -353,7 +353,7 @@ Scheme开发者在编写`let`的变量绑定字句时经常使用方括号替代
 
 在`let`语句的正文中，Scheme表达式的求值过程与之前无异，因此我们可以将绑定变量作为调用对象使用。
 
-```
+```scheme
 (let ([f +])
     (f 2 3)) => 5
 
@@ -366,7 +366,7 @@ Scheme开发者在编写`let`的变量绑定字句时经常使用方括号替代
 
 绑定变量仅在`let`语句的正文中有效。
 
-```
+```scheme
 (let ([+ *])
     (+ 2 3)) => 6
 
@@ -377,7 +377,7 @@ Scheme开发者在编写`let`的变量绑定字句时经常使用方括号替代
 
 `let`语句可以互相嵌套。
 
-```
+```scheme
 (let ([a 4] [b -3])
     (let ([a-squared (* a a)] [b-squared (* b b)])
         (+ a-squared b-squared))) => 25
@@ -385,7 +385,7 @@ Scheme开发者在编写`let`的变量绑定字句时经常使用方括号替代
 
 当内层和外层的`let`语句使用了相同的绑定变量时，外层的绑定变量对内层的正文不可见。
 
-```
+```scheme
 (let ([x 1])
     (let ([x (+ x 1)])
         (+ x x))) => 4
@@ -399,7 +399,7 @@ Scheme开发者在编写`let`的变量绑定字句时经常使用方括号替代
 
 如果不想屏蔽外层的绑定变量，可以在内层的变量绑定语句中使用不同的变量名。
 
-```
+```scheme
 (let ([x 1])
     (let ([new-x (+ x 1)])
         (+ new-x new-x))) => 4
@@ -414,7 +414,7 @@ Scheme开发者在编写`let`的变量绑定字句时经常使用方括号替代
 
 针对这种情况，Scheme提供了`lambda`表达式，它可用于创建一个新的函数，函数可接收参数并根据函数体计算结果，函数体和`let`语句的正文基本类似。
 
-```
+```scheme
 (lambda (x) (+ x x)) => #<procedure>
 ```
 
@@ -432,7 +432,7 @@ Scheme开发者在编写`let`的变量绑定字句时经常使用方括号替代
 
 函数的用法我们已经见过了，将参数传递给它即可：
 
-```
+```scheme
 ((lambda (x) (+ x x)) (* 3 4)) => 24
 ```
 
@@ -440,7 +440,7 @@ Scheme开发者在编写`let`的变量绑定字句时经常使用方括号替代
 
 因为函数是数据对象，我们可以在`let`的变量绑定语句中将函数绑定至一个变量，然后在`let`正文中多次使用。
 
-```
+```scheme
 (let ([double (lambda (x) (+ x x))])
     (list (double (* 3 4))
           (double (/ 99 11))
@@ -451,7 +451,7 @@ Scheme开发者在编写`let`的变量绑定字句时经常使用方括号替代
 
 和`let`表达式一样，一个`lambda`表达式同样可以被嵌套在其它`let`或`lambda`表达式中。
 
-```
+```scheme
 (let ([x 'a])
     (let ([f (lambda (y) (list x y))])
         (f 'b))) => (a b)
@@ -463,7 +463,7 @@ Scheme开发者在编写`let`的变量绑定字句时经常使用方括号替代
 
 下面考虑这样的情形：假如我们在`自由变量`被绑定的语句之外调用`lambda`表达式创建的函数会怎样呢？
 
-```
+```scheme
 (let ([f (let ([x 'sam])
             (lambda (y z) (list x y z)))])
     (f 'i 'am)) => (sam i am)
@@ -472,7 +472,7 @@ Scheme开发者在编写`let`的变量绑定字句时经常使用方括号替代
 答案是自由变量在函数被调用期间会一直有效，并且其值与创建函数时的绑定值是一样的；
 哪怕我们在调用该函数前又对其重新进行了绑定，其值依然不会受到影响（注意是在函数体内）。
 
-```
+```scheme
 (let ([f (let ([x 'sam])
             (lambda (y z) (list x y z)))])
     (let ([x 'not-sam])
@@ -484,7 +484,7 @@ Scheme开发者在编写`let`的变量绑定字句时经常使用方括号替代
 聪明的读者也许已经看出来了，`let`表达式实际上可以被转换为对`lambda`表达式的调用。
 例如，以下两个表达式的运行效果其实是一样的：
 
-```
+```scheme
 (let ([x 'a]) (cons x x)) ≡ ((lambda (x) (cons x x)) 'a)
 ```
 
@@ -510,7 +510,7 @@ Scheme开发者在编写`let`的变量绑定字句时经常使用方括号替代
 
 观察下面的例子可以让我们更加理解`lambda`表达式的完整形态：
 
-```
+```scheme
 (let ([f (lambda x x)])
     (f 1 2 3 4)) => (1 2 3 4)
 
@@ -533,21 +533,21 @@ Scheme开发者在编写`let`的变量绑定字句时经常使用方括号替代
 
 下面让我们在顶层创建一个函数：
 
-```
+```scheme
 (define double-any
     (lambda (f x) (f x x)))
 ```
 
 现在变量`double-any`和`cons`一样可在程序的任何地方使用了。事实上，当我们使用它时感觉跟其它内建函数没什么差别。
 
-```
+```scheme
 (double-any + 10) => 20
 (double-any cons 'a) => (a . a)
 ```
 
 `define`表达式不止可以创建函数，也可以用来定义其它类型的变量；
 
-```
+```scheme
 (define sandwich "peanut-buffer-and-jelly")
 
 sandwich => "peanut-buffer-and-jelly"
@@ -557,7 +557,7 @@ sandwich => "peanut-buffer-and-jelly"
 
 上面已经提到了，`define`表达式定义的变量可以被`let`和`lambda`表达式的变量绑定语句屏蔽掉。
 
-```
+```scheme
 (define xyz '(x y z))
 
 (let ([xyz '(z y x)])
@@ -569,7 +569,7 @@ sandwich => "peanut-buffer-and-jelly"
 下面让我们尝试实现Scheme支持的`car`和`cdr`的组合函数：`cadr`和`cddr`，
 `(cadr list)`等同于`(car (cdr list))`，`(cddr list)`等同于`(cdr (cdr list))`：
 
-```
+```scheme
 (define cadr
     (lambda (x)
         (car (cdr x))))
@@ -605,7 +605,7 @@ sandwich => "peanut-buffer-and-jelly"
 
 例如，`cadr`和`list`函数的定义的简写方式如下：
 
-```
+```scheme
 (define (cadr x)
     (car (cdr x)))
 
@@ -617,7 +617,7 @@ sandwich => "peanut-buffer-and-jelly"
 如果你使用了没有被`let`、`lambda`或`define`表达式绑定的变量，会发生什么呢？
 尝试一下运行下面的表达式：
 
-```
+```scheme
 (i-am-not-defined 3)
 ```
 
@@ -625,7 +625,7 @@ sandwich => "peanut-buffer-and-jelly"
 
 那么是不是只要使用未被绑定的变量就一定会出错呢？未必如此。
 
-```
+```scheme
 (define proc1
     (lambda (x y)
         (proc2 x y)))
@@ -635,7 +635,7 @@ sandwich => "peanut-buffer-and-jelly"
 Scheme对这种写法是不会报错的，因为在Scheme看来你可能会在未来某个时候定义变量`proc2`。
 当然了，如果你在没有定义变量`proc2`的情况下就调用`proc1`，Scheme还是会报错并提示你变量`proc2`未被绑定。
 
-```
+```scheme
 (define proc2 cons)
 (proc1 'a 'b)   (b . a)
 ```
@@ -647,7 +647,7 @@ Scheme对这种写法是不会报错的，因为在Scheme看来你可能会在�
 
 编写程序必然涉及到分支判断，Scheme同样提供了条件判断语句，它属于特殊表达式。
 
-```
+```scheme
 (define abs
     (lambda (n)
         (if (< n 0)
@@ -663,7 +663,7 @@ Scheme对这种写法是不会报错的，因为在Scheme看来你可能会在�
 
 `abs`函数可以有多种写法：
 
-```
+```scheme
 (define abs (lambda (n)
     (if (>= n 0) n
         (- 0 n))))
@@ -715,7 +715,7 @@ Scheme对这种写法是不会报错的，因为在Scheme看来你可能会在�
 因此，`or`表达式的返回值有多种可能的数据类型，而不仅仅是真（`#t`）和假（`#f`）。
 最后，没有任何子项的`or`表达式，也就是`(or)`的值为`#f`。
 
-```
+```scheme
 (< -1 0) => #t
 (> -1 0) => #f
 ```
@@ -723,7 +723,7 @@ Scheme对这种写法是不会报错的，因为在Scheme看来你可能会在�
 在Scheme中，任何类型的任何数据都可以被作为条件表达式进行判断。
 需要记住的是，**除了`#f`以外的所有数据都被Scheme认为是真**。
 
-```
+```scheme
 (if #t 'true 'false) => true
 (if #f 'true 'false) => false
 (if '() 'true 'false) => true
@@ -745,7 +745,7 @@ Scheme对这种写法是不会报错的，因为在Scheme看来你可能会在�
 
 下面我们用`and`重新定义函数`reciprocal`：
 
-```
+```scheme
 (define reciprocal
     (lambda (n)
         (and (not (= n 0))
@@ -762,7 +762,7 @@ Scheme对这种写法是不会报错的，因为在Scheme看来你可能会在�
 在上一章中已经提过了，大部分谓词都以`?`结尾，除了上述的几个数值比较谓词。
 谓词并不都以数字为参数，谓词`null?`在参数为空list时返回真，否则返回假。
 
-```
+```scheme
 (null? '()) => #t
 (null? 'abc) => #f
 (null? '(x y z)) => #f
@@ -773,7 +773,7 @@ Scheme对这种写法是不会报错的，因为在Scheme看来你可能会在�
 与之相对的，`Common Lisp`的`cdr`在遇到`()`参数时会返回`()`，而不是抛出异常。
 下面我们尝试实现`Common Lisp`风格的`cdr`函数：
 
-```
+```scheme
 (define lisp-cdr
     (lambda (x)
         (if (null? x)
@@ -787,7 +787,7 @@ Scheme对这种写法是不会报错的，因为在Scheme看来你可能会在�
 
 谓词`eqv?`可用于比较两个参数，当两个参数相同时返回`#t`，否则返回`#f`。
 
-```
+```scheme
 (eqv? 'a 'a) => #t
 (eqv? 'a 'b) => #f
 (eqv? #f #f) => #t
@@ -809,7 +809,7 @@ Scheme对这种写法是不会报错的，因为在Scheme看来你可能会在�
 Scheme提供了一系列用于判断数据类型的谓词，例如：`pair?、symbol?、number?和string?`。
 谓词`pair?`用于判断参数的类型是否为`pair`，是则返回`#t`，否则返回`#f`。
 
-```
+```scheme
 (pair? '(a . c)) => #t
 (pair? '(a b c)) => #t
 (pair? '()) => #f
@@ -821,7 +821,7 @@ Scheme提供了一系列用于判断数据类型的谓词，例如：`pair?、sy
 类型判断谓词经常被用于在函数实现中判断参数的类型是否和预期的一致。
 例如，我们可以让函数`reciprocal`对其参数进行检查，以确保传递的参数是数字。
 
-```
+```scheme
 (define reciprocal
     (lambda (n)
         (if (and (number? n) (not (= n 0)))
@@ -835,7 +835,7 @@ Scheme提供了一系列用于判断数据类型的谓词，例如：`pair?、sy
 上面的实现还有个缺陷，那就是调用`reciprocal`的代码必须检查返回值是否为数字。
 为了让`reciprocal`的返回值总是数字，我们可以在参数不合法时抛出异常。
 
-```
+```scheme
 (define reciprocal
     (lambda (n)
         (if (and (number? n) (not (= n 0)))
@@ -854,7 +854,7 @@ Scheme提供了一系列用于判断数据类型的谓词，例如：`pair?、sy
 `cond`表达式可以将多个条件判断语句和执行语句组合成一体。
 下面定义的函数`sign`在参数为负数时返回-1，参数为正数时返回+1，参数为0则返回0。
 
-```
+```scheme
 (define sign
     (lambda (n)
         (if (< n 0)
@@ -871,7 +871,7 @@ Scheme提供了一系列用于判断数据类型的谓词，例如：`pair?、sy
 
 很显然上面的`if`嵌套语句既难写又难懂，使用`cond`表达式可以使其变得清晰很多。
 
-```
+```scheme
 (define sign
     (lambda (n)
         (cond
@@ -889,7 +889,7 @@ Scheme提供了一系列用于判断数据类型的谓词，例如：`pair?、sy
 尽管最后一个`else`字句可以忽略不写，在决定将其忽略之前我们必须确保前面的条件判断不会全部失败，
 就像下面的`sign`函数一样：
 
-```
+```scheme
 (define sign
     (lambda (n)
         (cond
@@ -901,7 +901,7 @@ Scheme提供了一系列用于判断数据类型的谓词，例如：`pair?、sy
 上面的`cond`表达式中的条件判断语句的顺序对`sign`函数的执行结果没有影响，因为这些条件本身是互斥的，
 对同一个数字只有一个条件的求值结果可能为真。再看下面的个人所得税计算函数：
 
-```
+```scheme
 (define income-tax
     (lambda (income)
         (cond
