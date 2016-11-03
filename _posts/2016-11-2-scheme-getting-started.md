@@ -410,7 +410,7 @@ Scheme开发者在编写`let`的变量绑定字句时经常使用方括号替代
 首先观察表达式`(let ([x (* 3 4)]) (+ x x))`，可以看到绑定变量`x`的值为`(* 3 4)`。
 现在假设我们希望得到`x`等于`(/ 99 11)`时表达式`(+ x x)`的值。该怎么做呢？
 看起来最直接的做法是复制一份之前的`let`语句，并将绑定变量`x`的值修改为`(/ 99 11)`。
-按照上述的做法，我们不得不将`let`语句的正文重写了一遍，尽管这个例子的正文很短小，现实中正文的内容却有可能非常复杂。
+按照上述做法，我们不得不将`let`语句的正文重写了一遍，尽管这个例子的正文很短小，现实中正文的内容却有可能非常复杂。
 
 针对这种情况，Scheme提供了`lambda`表达式，它可用于创建一个新的函数，函数可接收参数并根据函数体计算结果，函数体和`let`语句的正文基本类似。
 
@@ -1126,5 +1126,276 @@ Scheme提供了一系列用于判断数据类型的谓词，例如：`pair?、sy
 我们将在第5章中给出`map`函数的完整实现。
 
 ## 赋值操作
+
+和其它编程语言一样，Scheme同样支持对变量进行赋值（尽管不用赋值也能实现很多程序），
+无论该变量是顶层定义的、`let`定义的还是`lambda`定义的。Scheme的变量赋值通过`set!`完成。
+
+```scheme
+(define abcde '(a b c d e))
+abcde => (a b c d e)
+(set! abcde (cdr abcde))
+abcde => (b c d e)
+(let ([abcde '(a b c d e)])
+    (set! abcde (reverse abcde))
+    abcde) => (e d c b a)
+```
+
+很编程语言允许将变量的声明和初始化分开写。在Scheme中，变量在被创建时必需有一个初始值。
+这避免了因为忘记初始化变量导致的任何运行错误。
+
+实际上，在Scheme的世界中，赋值操作不仅不是必须的，并且使用起来也不大方便。
+在实际情况中用Scheme表述一个算法时，不使用变量赋值通常能够使代码更加清晰。
+在不少编程语言中，为了计算出某个结果通常会涉及到一系列赋值操作，例如下面的计算二次方程的根的函数。
+
+```scheme
+(define quadratic-formula
+    (lambda (a b c)
+        (let ([root1 0] [root2 0] [minusb 0] [radical 0] [divisor 0])
+            (set! minusb (- b))
+            (set! radical (sqrt (- (* b b) (* 4 a c))))
+            (set! divisor (* 2 a))
+            (set! root1 (/ (+ minusb radical) divisor))
+            (set! root2 (/ (- minusb radical) divisor))
+            (cons root1 root2))))
+```
+
+函数`quadratic-formula`计算了方程式`0 = ax^2 + bx + c`的根。
+
+```scheme
+(quadratic-formula 2 -4 -6) => (3 . -1)
+```
+
+尽管以上实现能够正确计算出方程式的根，我们可以在不用赋值操作的情况下以更为清晰的方式实现其功能。
+
+```scheme
+(define quadratic-formula
+    (lambda (a b c)
+        (let ([minusb (- b)]
+              [radical (sqrt (- (* b b) (* 4 a c)))]
+              [divisor (* 2 a)])
+            (let ([root1 (/ (+ minusb radical) divisor)]
+                  [root2 (/ (- minusb radical) divisor)])
+                (cons root1 root2)))))
+```
+
+以上代码消除了`set!`语句，然而程序的算法并没有发生任何变化。
+相反，我们通过`let`语句清晰的体现出了`root1`和`root2`对`minusb`、`radical`和`divisor`的依赖。
+此外我们还可通过`let`语句看出`root1`和`root2`互相没有依赖，同理`minusb`、`radical`和`divisor`之间也没有依赖。
+
+当然赋值操作也并非全无用处，否则Scheme就不会支持它了：）。
+以下面的`kons`函数为例，该函数会将自身被调用的次数保存至变量`kons-count`，
+而设置变量`kons-count`除了使用`set!`别无他法。
+
+```scheme
+(define kons-count 0)
+(define kons
+    (lambda (x y)
+        (set! kons-count (+ kons-count 1))
+        (cons x y)))
+
+(kons 'a '(b c)) => (a b c)
+kons-count => 1
+(kons 'a (kons 'b (kons 'c '()))) => (a b c)
+kons-count => 4
+```
+
+赋值操作通常在实现一些需要保存内部状态的函数时才会用到。
+假设我们需要实现一个计数函数，该函数第一次被调用时返回0，第二次被调用时返回1，第三次被调用时返回2，如此类推。
+我们可以通过类似上面`kons`函数的实现方式来写这个函数。
+
+```scheme
+(define next 0)
+(define count
+    (lambda ()
+        (let ([v next])
+            (set! next (+ next 1))
+            v)))
+
+(count) => 0
+(count) => 1
+```
+
+以上实现有个缺点，那就是我们在顶层引入了一个新的变量`next`，该变量对其它函数或代码来讲是没有实际意义的。
+更有甚者，其它代码有可能无意中修改`next`变量，这会导致`count`函数的行为变得不可预期。
+为解决上述问题，我们通过`let`语句创建`next`变量：
+
+```scheme
+(define count
+    (let ([next 0])
+        (lambda ()
+            (let ([v next])
+                (set! next (+ next 1))
+                v))))
+```
+
+我们可以进一步扩展代码以实现一个计数器的生产函数，该生产函数能够生成新的计数器，每个计数器都有各自独立的计数状态。
+
+```scheme
+(define make-counter
+    (lambda ()
+        (let ([next 0])
+            (lambda ()
+                (let ([v next])
+                    (set! next (+ next 1))
+                    v)))))
+
+(define count1 (make-counter))
+(define count2 (make-counter))
+(count1) => 0
+(count2) => 0
+(count1) => 1
+(count1) => 2
+(count2) => 1
+```
+
+如果我们既希望某个变量能被多个函数共享，又不希望将该变量暴露出去，
+可以使用`let`创建变量并使用`set!`将函数设置为顶层可见。
+
+```scheme
+(define shhh #f)
+(define tell #f)
+(let ([secret 0])
+    (set! shhh
+        (lambda (message)
+            (set! secret message)))
+    (set! tell
+        (lambda () secret)))
+
+(shhh "sally likes harry")
+(tell) => "sally likes harry"
+secret => exception: variable secret is not bound
+```
+
+变量在被赋值之前必须先定义，因此我们在最顶层定义了`shhh`和`tell`（初始值是什么无所谓）。
+我们将在第3章进一步研究这段代码并介绍封装代码库的方法。
+
+函数的内部状态有时可被用来将某些计算延迟进行，我们称之为`惰性计算`。
+下面的函数`lazy`的参数是个没有参数的函数（也叫作`thunk`）。
+`thunk`经常被用于执行一些需要延迟进行的计算，并且一旦计算过一次其结果会被记录下来作为后续调用的返回值。
+假设我们将函数`t`作为参数传递给了`lazy`，`lazy`会返回一个新函数，该函数会在被调用时返回函数`t`的调用返回值，
+此外`t`的调用返回值还会被作为内部状态记录下来，这样一来就不用每次被调用时重新计算。
+最后，`lazy`使用了一个布尔变量来标记函数`t`是否被调用过。
+
+```scheme
+(define lazy
+    (lambda (t)
+        (let ([val #f] [flag #f])
+            (lambda ()
+                (if (not flag)
+                    (begin (set! val (t))
+                           (set! flag #t)))
+                val))))
+```
+
+我们在这里第一次见到了`begin`语句，它的功能是从左至右依次对其子项进行求值，并将最后一个子项的求值结果作为返回值。
+另外需要注意到的是`if`语句的第二个参数表达式可以忽略不写，这种写法只有在`if`语句的返回值被忽略掉的情况下才会采用。
+
+`惰性计算`尤其适用于一些非常耗时的计算过程。通过延迟计算，我们有可能在某些流程中将整个计算规避掉；
+通过保存计算结果，我们避免了计算的重复进行。
+
+展示`lazy`用法的最佳方式是在`thunk`中输出一些语句：
+
+```scheme
+(define p
+    (lazy (lambda()
+        (display "Ouch!")
+        (newline)
+        "got me")))
+```
+
+当`p`被第一次调用时，终端会输出`Ouch!`，并将字符串`"got me"`作为返回值。后面再调用`p`就看不到`Ouch!`了，只有返回值。
+函数`display`的功能是输出一段信息（不包含双引号），函数`newline`的功能是输出换行符。
+
+为了进一步展示`set!`的用法，我们接下来要实现一个栈对象，同样其内部状态是不向外暴露的。
+我们的栈对象接受四种信号：信号`empty?`用于判断栈是否为空；信号`push!`用于将新数据入栈；
+信号`top`用于返回栈顶的数据；信号`pop!`用于弹出栈顶的数据。
+与之前的`make-counter`类似，函数`make-stack`可返回一个新的栈对象。
+
+```scheme
+(define make-stack
+    (lambda ()
+        (let ([ls '()])
+            (lambda (msg . args)
+                (cond
+                    [(eqv? msg 'empty?) (null? ls)]
+                    [(eqv? msg 'push!) (set! ls (cons (car args) ls))]
+                    [(eqv? msg 'top) (cdr ls)]
+                    [(eqv? msg 'pop!) (set! ls (cdr ls))]
+                    [else "oops"])))))
+```
+
+如你所见，栈中的数据以list形式保存至了变量`ls`，并且在处理信号`push!`和`pop!`时使用了`set!`表达式。
+另外需要注意的一点是内层的lambda表达式使用了`rest参数`，这是因为不同的信号接收的参数个数是不同的。
+
+```scheme
+(define stack1 (make-stack))
+(define stack2 (make-stack))
+(list (stack1 'empty?) (stack2 'empty?)) => (#t #t)
+
+(stack1 'push! 'a)
+(list (stack1 'empty?) (stack2 'empty?)) => (#f #t)
+
+(stack1 'push 'b)
+(stack2 'push 'c)
+(stack1 'top) => b
+(stack2 'top) => c
+
+(stack1 'pop!)
+(stack1 'top) => a
+(list (stack1 'empty?) (stack2 'empty?)) => (#f #f)
+
+(stack1 'pop!)
+(list (stack1 'empty?) (stack2? 'empty?)) => (#t #f)
+```
+
+和`make-counter`创建的计数器一样，栈数据的状态只在栈对象的内部可见。任何访问栈数据的代码都必须通过栈对象进行。
+这样做的好处是我们可以根据需要调整栈数据的存储方式，比如改为使用向量（见第6章），而使用栈对象的代码无需任何改动。
+像这样通过接口而不是内部实现来描述的对象我们称之为`抽象对象`，在第12章中我们会更深入的对其进行讨论。
+
+除了设置变量以外，我们还可以通过`set-car!`和`set-cdr!`设置一个`pair`的`car`和`cdr`。
+
+```scheme
+(define p (list 1 2 3)
+(set-car! (cdr p) 'two)
+p => (1 two 3)
+(set-cdr! p '())
+p => (1)
+```
+
+我们可以使用`set-car!`和`set-cdr!`定义一个数据队列，它和栈有些类似，只不过数据的添加和删除分别在队列的两侧进行。
+在接下来的数据队列实现中，我们使用了`tconc`数据结构。
+`tconc`由一个非空的list和一个头部组成，头部也是一个`pair`，它的`car`和`cdr`分别指向list的头和尾。
+
+![tconc](../img/tspl/tconc.png)
+
+`tconc`中的list的最后一个子项不包含真实数据，它存在的目的仅是为了表示队列的末尾。
+
+以下是关于数据队列的4个函数：函数`make-queue`用于创建新的数据队列；
+函数`putq!`用于向队列添加数据；函数`getq`用于读取队列头部的数据；函数`delq!`用于删除队列头部的数据；
+
+```scheme
+(define make-queue
+    (lambda ()
+        (let ([end (cons 'ignored '())])
+            (cons end end))))
+
+(define putq!
+    (lambda (q v)
+        (let ([end (cons 'ignored '())])
+            (set-car! (cdr q) v)
+            (set-cdr! (cdr q) end)
+            (set-cdr! q end))))
+
+(define getq
+    (lambda (q)
+        (car (car q))))
+
+(define delq!
+    (lambda (q)
+        (set-car! q (cdr (car q)))))
+```
+
+以上函数都很好理解，除了`putq!`需要稍微解释一下：它将新添加的数据直接设置为最后一个`pair`的car，
+然后再重新创建一个代表末尾的`pair`。
 
 ## [习题及解答](https://github.com/jack-ji/scheme-ex/blob/master/tspl/2.ss)
