@@ -1127,4 +1127,4 @@ Scheme提供了一系列用于判断数据类型的谓词，例如：`pair?、sy
 
 ## 赋值操作
 
-## [习题及解答](https://github.com/jack-ji/scheme-ex/blob/master/tspl/2-2.ss)
+## [习题及解答](https://github.com/jack-ji/scheme-ex/blob/master/tspl/2.ss)
