@@ -918,4 +918,213 @@ Scheme提供了一系列用于判断数据类型的谓词，例如：`pair?、sy
 
 很显然，`income-tax`的计算结果依赖于条件判断语句的执行顺序。
 
+## 简单递归
+
+我们已经介绍过了如何使用`if、and、or、cond和quote`来控制子项表达式是否被求值，
+此外我们还介绍了使用`lambda`表达式将重复进行的计算过程抽象为函数，以达到复用目的。
+接下来我们需要解决的问题是如何针对一个list的每个子项或者数字1到10重复对某些表达式进行求值。
+这就是我们开始接触递归的好时机了。递归的概念其实很简单：在函数内部调用自身。
+递归刚开始掌握起来会有些烧脑，然而一旦被熟练掌握以后它的程序表达能力远不是寻常的循环语句可比拟的。
+
+下面我们来看一个简单的递归实例：
+
+```scheme
+(define goodbye
+    (lambda () (goodbye)))
+
+(goodbye) =>
+```
+
+函数`goodbye`没有参数，它所做的唯一事情就是调用自己。执行该函数没有返回值的原因是它永远不会返回。
+
+很显然，更合理的使用递归的方式是在达成某个目标后停止递归并返回。
+大多数递归函数具备至少两个要素：`基准情形`和`递归步进`。
+`基准情形`用于描述一些特殊参数，在处理这些参数时会停止递归并返回结果。
+`递归步进`是指计算下一次迭代传递给函数的参数。
+为了使递归正常终止，每次`递归步进`都会使递归参数越来越接近`基准情形`。
+
+下面让我们以递归方式计算一个list的长度，首先分别考虑其`基准情形`和`递归步进`两个要素。
+`基准情形`很明显，就是当参数为空list时——list的长度为0。
+`递归步进`则采用list的`cdr`，因为整个list的长度就是1加上其`cdr`的长度。
+
+```scheme
+(define length
+    (lambda (ls)
+        (if (null? ls)
+            0
+            (+ (length (cdr ls)) 1))))
+
+(length '()) => 0
+(length '(a)) => 1
+(length '(a b)) => 2
+```
+
+实现通过`if`判断list是否为空，若是则立刻返回0，这就是我们的`基准情形`。
+否则，我们将list的`cdr`作为参数再次调用自身，并将结果加1后返回，这就是我们的`递归步进`。
+
+很多Scheme实现都提供了追踪函数执行过程的功能。
+比如在`Chez Scheme`中，你可以通过`(trace name)`追踪指定的函数，其中`name`就是你在顶层定义的函数对象的名称。
+如果你尝试追踪调用语句`(length '(a b c d))`，其输出大概如下：
+
+```
+|(length (a b c d))
+| (length (b c d))
+| |(length (c d))
+| | (length (d))
+| | |(length ())
+| | |0
+| | 1
+| |2
+| 3
+|4
+4
+```
+
+以上追踪信息通过缩进表明了递归调用的层级，竖线`|`以可视化的方式给出了每个层级的最终返回值。
+可以注意到，随着递归层级的增加，`length`的list参数越来越短，到最深层级时list参数为`()`，
+此时函数返回了0，然后随着调用层级的递减函数返回值也逐渐的递增，最后就得到了我们想要的list的长度。
+
+下面我们再尝试实现递归函数`list-copy`，其功能是返回其list参数的一份拷贝。
+
+```scheme
+(list-copy '()) => ()
+(list-copy '(a b c)) => (a b c)
+```
+
+在看下面的代码之前请先尝试一下自己来实现`list-copy`。
+
+```scheme
+(define list-copy
+    (lambda (x)
+        (if (null? x) '()
+            (cons (car x)
+                  (list-copy (cdr x))))))
+```
+
+`list-copy`的定义和`length`非常类似，它同样以空list作为基准情形，并将参数的`cdr`作为下一次迭代的参数。
+空list的拷贝结果是`()`。将参数的`car`和参数的`cdr`的拷贝`cons`起来就得到了最终的拷贝结果。
+
+基准情形并不一定只有一种情况。以函数`memv`为例，它接受两个参数，一个对象和一个list。
+当list中包含有指定的对象时，函数`memv`返回以该对象为`car`的list（相当于list参数的`尾巴`），否则返回#f。
+
+```scheme
+(define memv
+    (lambda (x ls)
+        (cond
+            [(null? ls) #f]
+            [(eqv? (car ls) x) ls]
+            [else (memv x (cdr ls))])))
+
+(memv 'a '(a b b d)) => (a b b d)
+(memv 'b '(a b b d)) => (b b d)
+(memv 'c '(a b b d)) => #f
+(memv 'd '(a b b d)) => (d)
+(if (memv 'b '(a b b d))
+    "yes"
+    "no") => "yes"
+```
+
+`memv`的实现中用有两个基准情形：空list和对象匹配成功，两种情况都会停止递归并返回结果。
+
+`递归步进`同样可能有多种方式，以函数`remv`为例，它接受的参数与`memv`相同，
+其功能是返回一个新的list，该list包含除了指定对象以外的list参数中的所有子对象。
+
+```scheme
+(define remv
+    (lambda (x ls)
+        (cond
+            [(null? ls) '()]
+            [(eqv? (car ls) x) (remv x (cdr ls))]
+            [else (cars (car ls) (rem x (cdr ls)))])))
+
+(memv 'a '(a b b d)) => (b b d)
+(memv 'b '(a b b d)) => (a d)
+(memv 'c '(a b b d)) => (a b b d)
+(memv 'd '(a b b d)) => (a b b)
+```
+
+`remv`的实现与`memv`稍微有些类似，主要区别是在找到对象后并不会马上返回结果，而是继续递归处理list的`cdr`。
+若在本次递归中匹配对象未能成功，`remv`的处理和`list-copy`是一样的：
+将参数的`car`和参数的`cdr`的递归处理结果`cons`起来就得到了最终结果。
+
+目前为止我们见过的递归操作都是在list的`cdr`上进行的。在有些情况下，我们也需要在list的`car`上进行递归操作。
+函数`tree-copy`将`pair`类型的数据看作为一颗二叉树：`pair`的`car`存放了左子树，`pair`的`cdr`则存放了右子树。
+`tree-copy`执行的操作与`list-copy`类似：遍历所有元素并创建新的pair。
+
+```scheme
+(define tree-copy
+    (lambda (tr)
+        (if (not (pair? tr))
+            tr
+            (cons (tree-copy (car tr))
+                  (tree-copy (cdr tr))))))
+
+(tree-copy '((a . b) . c)) => ((a . b) . c)
+```
+
+如你所见，为了完整拷贝整个`pair`的结构，函数`tree-copy`需要在每个`pair`的`car`和`cdr`上同时递归。
+其基准情形很明显，一切不是`pair`的数据都可被直接返回。
+
+介绍到这个阶段，有些学习和使用过C/C++或Java等编程语言的朋友可能想知道Scheme语言是否支持类似于`for`和`while`的循环语法结构。
+答案是不支持。Scheme中的循环全部都是用递归实现的，用递归实现循环实际上可以使代码更加清晰和简洁。
+有不少递归调用实际上就是在做循环操作（我们在第3章会更多介绍），不过已经能够熟练使用递归的Scheme程序员不会纠结于这一点，
+将更多的注意力放在编写简洁、有效的代码上即可。
+
+在进入下一小节之前，我们再为大家介绍一下常用的`map`函数。
+首先看下面的`abs-all`函数，其功能是接受一个list为参数并返回一个新的list，新的list包含参数中所有数字的绝对值。
+
+```scheme
+(define abs-all
+    (lambda (ls)
+        (if (null? ls)
+            '()
+             (cons (abs (car ls))
+                   (abs-all (cdr ls))))))
+
+(abs-all '(1 -2 3 -4 5 -6)) => (1 2 3 4 5 6)
+```
+
+本质上`abs-all`所做的事情就是对参数list的每个子项应用`abs`函数，然后将计算结果组成一个新的list。
+因此我们也称函数`abs-all`将`abs`操作`map`到了list参数上。
+类似这样`“将某个函数map到一个list上”`的操作在Scheme中非常常见，因此Scheme提供了上面提到的`map`函数。
+`map`函数**一般**接受两个参数，它会将第一个参数代表的函数对象应用到第二个参数代表的list中的每个元素，
+然后将结果组成新的list返回。下面是用`map`函数重新定义的`abs-all`：
+
+
+```scheme
+(define abs-all
+    (lambda (ls)
+        (map abs ls)))
+```
+
+有了`map`函数后我们就可以不用`abs-all`了（尽管`abs-all`可以使代码更简短些）。
+
+```scheme
+(map abs '(1 -2 3 -4 5 -6)) => (1 2 3 4 5 6)
+```
+
+我们还可以将接受多个参数的函数`map`到多个list上。
+
+```scheme
+(map cons '(a b c) '(1 2 3)) => ((a . 1) (b . 2) (c . 3))
+```
+
+在这种情况下，各个list参数的长度必须一致，并且list参数的个数也必须和函数对象接受的参数个数相一致。
+`map`返回的list中的每个元素是将函数对象应用到每个list参数的对应元素的结果。
+
+通过观察`abs-all`函数的第一个实现，我们可以尝试自己写一个只接受两个参数的`map`函数。
+
+```scheme
+(define map1
+    (lambda (f ls)
+        (if (null? ls)
+            '()
+            (cars (f (car ls)) (map1 f (cdr ls))))))
+```
+
+可以看到，`map1`函数和`abs-all`函数的第一个实现基本一样，只不过我们将`abs`函数替换成了通用的函数对象`f`。
+我们将在第5章中给出`map`函数的完整实现。
+
+## 赋值操作
+
 ## [习题及解答](https://github.com/jack-ji/scheme-ex/blob/master/tspl/2-2.ss)
