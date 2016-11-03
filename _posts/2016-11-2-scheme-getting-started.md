@@ -1319,7 +1319,7 @@ secret => exception: variable secret is not bound
                 (cond
                     [(eqv? msg 'empty?) (null? ls)]
                     [(eqv? msg 'push!) (set! ls (cons (car args) ls))]
-                    [(eqv? msg 'top) (cdr ls)]
+                    [(eqv? msg 'top) (car ls)]
                     [(eqv? msg 'pop!) (set! ls (cdr ls))]
                     [else "oops"])))))
 ```
