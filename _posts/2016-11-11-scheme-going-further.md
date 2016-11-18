@@ -328,4 +328,58 @@ Scheme规范要求每个Scheme实现都必须将`尾调用`处理成`goto`、`ju
 基于**递归**和**带命名的let**我们可以实现很多有用的算法，无论是使用循环、递归还是部分循环和部分递归，
 Scheme程序员只使用一种语法结构就达到了上述目的，是不是很完美呢？
 
-## [习题及解答](https://github.com/jack-ji/scheme-ex/blob/master/tspl/3.ss)
+下面给出两个通过`带命名的let`实现的阶乘运算函数。
+第一个直接基于阶乘的定义`n!=n*(n-1)`、`0!=1`实现了一个很简单的递归运算：
+
+```scheme
+(define factorial
+    (lambda (n)
+        (let fact ([i n])
+            (if (= i 0)
+                1
+                (* i (fact (- i 1)))))))
+
+(factorial 0) => 1
+(factorial 1) => 1
+(factorial 2) => 2
+(factorial 3) => 6
+(factorial 10) => 362880
+```
+
+第二个则通过尾递归实现了`n!=n*(n-1)*(n-2)*...*1`，在递归期间通过变量`a`记录累积计算的结果:
+
+```scheme
+(define factorial
+    (lambda (n)
+        (let fact ([i n] [a 1])
+            (if (= i 0)
+                a
+                (fact (- i 1) (* a i))))))
+```
+
+另外一个类似的例子是计算菲波那切数列的第n项。
+菲波那切数列是一个特殊的数字序列，其中每个数字都是前两个数字的和，例如`0、1、1、2、3、5、8、13`。
+很显然，计算数列的第n项可以很直接的用递归函数实现：
+
+```scheme
+(define fibonacci
+    (lambda (n)
+        (let fib ([i n])
+            (cond
+                [(= i 0) 0]
+                [(= i 1) 1]
+                [else (+ (fib (- n 1)) (fib (- n 2)))]))))
+
+(fibonacci 0) => 0
+(fibonacci 1) => 1
+(fibonacci 2) => 1
+(fibonacci 3) => 2
+(fibonacci 4) => 3
+(fibonacci 5) => 5
+(fibonacci 6) => 8
+(fibonacci 20) => 6765
+(fibonacci 30) => 832040
+```
+
+
+## [习题及解答]=> (https://github.com/jack-ji/scheme-ex/blob/master/tspl/3.ss)
