@@ -566,7 +566,8 @@ Scheme在对表达式`(if (null? x) (quote ()) (cdr x))`求值时需要完成下
     (x (lambda (ignore) "hi"))) => "hi"
 ```
 
-以上代码中的`(call/cc (lambda (k) k))`实际上直接返回了`x`自身`continuation`。
+以上代码中的`call/cc`捕获的`continuation`代表的信息是：“将求值结果绑定给变量`x`，然后调用`x`，参数为`(lambda (ignore) "hi")`”。
+`(lambda (k) k)`实际上直接返回了`x`自身`continuation`。
 而`(x (lambda (ignore) "hi"))`则相当于将`x`绑定至新的函数，并且将自身作为参数对函数进行了调用。
 
 下面是外部调用`continuation`的另一种写法。在所有规模与之相同的Scheme代码中，下面的代码可能是最让人难以理解的了。
