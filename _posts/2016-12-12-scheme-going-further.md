@@ -749,4 +749,16 @@ Scheme在对表达式`(if (null? x) (quote ()) (cdr x))`求值时需要完成下
 
 ## 内部定义
 
+在上一章，我们讨论了顶层定义语法，也就是`define`表达式。
+实际上，`define`表达式也可以被作为`lambda`、`let`和`letrec`的正文部分的起始内容。
+很显然，这种`define`语句定义的变量的有效范围就是其正文部分，因此我们称这种定义为`内部定义`。
+
+```scheme
+(define f (lambda (x) (* x x)))
+(let ([x 3])
+    (define f (lambda (y) (+ y x)))
+    (f 4)) => 7
+(f 4) => 16
+```
+
 ## [习题及解答](https://github.com/jack-ji/scheme-ex/blob/master/tspl/3.ss)
