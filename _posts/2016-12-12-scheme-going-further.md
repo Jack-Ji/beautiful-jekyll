@@ -761,4 +761,106 @@ Scheme在对表达式`(if (null? x) (quote ()) (cdr x))`求值时需要完成下
 (f 4) => 16
 ```
 
+内部定义同样可以使用递归技术。我们可以将上一章的`even?`和`odd?`实例改写如下：
+
+```scheme
+(let ()
+    (define even?
+        (lambda (x)
+            (or (= x 0)
+                (odd? (- x 1)))))
+    (define odd?
+        (lambda (x)
+            (and (not (= x 0))
+                 (even? (- x 1)))))
+    (even? 20)) => #t
+```
+
+类似的，我们也可以将之前编写的`list?`函数中的`letrec`替换为内部定义：
+
+```scheme
+(define list?
+    (lambda (x)
+        (define race
+            (lambda (h t)
+                (if (pair? h)
+                    (let ([h (cdr h)])
+                        (if (pair? h)
+                            (and (not (eq? h t))
+                                 (race (cdr h) (cdr t)))
+                            (null? h)))
+                     (null? h))))
+         (race x x)))
+```
+
+抛掉语法上的差别不提，内部定义和`letrec`的最大差别是`letrec`无法保证多个内部定义按照从左至右的顺序依次被求值，
+因此我们不能使用`letrec`完全替代内部定义。
+我们可以使用`letrec*`（`let*`与之类似）来保证其绑定语句被严格地按照从左至右的顺序进行求值。
+下面是内部定义的一般形式（位于`lambda`、`let`、`letrec`等语句的正文起始部分）：
+
+```scheme
+(define var expr0)
+...
+expr1
+expr2
+...
+```
+
+该定义可被等价转换为以下`letrec*`语句：
+
+```scheme
+(letrec* ((var expr0) ...) expr1 expr2 ...)
+```
+
+以上`letrec*`语句又可被等价转换为下面的`let`语句：
+
+```scheme
+(let ()
+    (define var expr0)
+    ...
+    expr1
+    expr2
+    ...
+)
+```
+
+很明显，`letrec*`和内部定义的相互转换是`非对称`的，这是因为`letrec*`可以出现任何表达式能出现的地方，
+而内部定义则只能出现在正文的起始部分。因此当我们使用内部定义替换`letrec*`语句时需要引入`let`表达式。
+
+内部定义和`letrec`、`letrec*`的另一个较大的区别是内部定义不光能定义变量，还可以定义语法扩展（我们称其为内部语法扩展）！
+
+```scheme
+(let ([x 3])
+    (define-syntax set-x!
+        (syntax-rules ()
+            [(_ e) (set! x e)]))
+    (set-x! (+ x x))
+    x) => 6
+```
+
+内部语法扩展的有效范围同样是包围该定义的语句的正文部分。
+
+内部定义和最外层的顶层定义结合起来为我们提供了一个将程序划分为多个模块的手段。
+程序的每个模块都只对外暴露其它模块会使用的接口，内部函数或接口都应被隐藏起来以免误被使用。
+下面是一种常用的定义模块的方式：
+
+```scheme
+(define export-var #f)
+
+(let ()
+    (define var expr)
+    ...
+    init-expr
+    ...
+    (set! export-var export-val)
+)
+```
+
+首先，我们使用`define`在全局命名空间中添加了需要对外暴露的变量名称。
+然后，我们在`let`语句的正文起始部分定义了内部使用的变量，并通过表达式`init-expr ...`完成必要的初始化工作。
+最后，我们通过`set!`表达式设置需要对外暴露的变量的值。
+
+以上定义方式的优点之一是可以在开发模块的过程中将最外层的`let`语句注释或删除掉，以便开发者在交互环境中进行测试。
+当然了，这种定义方式也有缺点，我们在下一节中会讲到。
+
 ## [习题及解答](https://github.com/jack-ji/scheme-ex/blob/master/tspl/3.ss)
