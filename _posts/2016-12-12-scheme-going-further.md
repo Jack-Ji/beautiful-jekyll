@@ -863,4 +863,56 @@ expr2
 以上定义方式的优点之一是可以在开发模块的过程中将最外层的`let`语句注释或删除掉，以便开发者在交互环境中进行测试。
 当然了，这种定义方式也有缺点，我们在下一节中会讲到。
 
+下面的模块只导出了一个变量：`calc`，其值是处理四则混合运算的函数：
+
+```scheme
+(define calc #f)
+(let ()
+    (define do-calc
+        (lambda (ek expr)
+            (cond
+                [(number? expr) expr]
+                [(and (list? expr) (= length (expr) 3))
+                 (let ([op (car expr)] [args (cdr expr)])
+                    (case op
+                        [(add) (apply-op ek + args)]
+                        [(sub) (apply-op ek - args)]
+                        [(mul) (apply-op ek * args)]
+                        [(div) (apply-op ek / args)]
+                        [else (complain ek "invalid operator" op)]))]
+                [else (complain ek  "invalid expression" expr)])))
+    (define apply-op
+        (lambda (ek op args)
+            (op (do-calc ek (car args)) (do-calc ek (cadr args)))))
+    (define complain
+        (lambda (ek msg expr)
+            (ek (list msg expr))))
+    (set! calc
+        (lambda (expr)
+            ; grab an error continuation ek
+            (call/cc
+                (lambda (ek)
+                    (do-calc ek expr))))))
+
+(calc '(add (mul 3 2) -4)) => 2
+(calc '(div 1/2 1/6)) => 3
+(calc '(add (mul 3 2) (div 4))) => ("invalid expression" (div 4))
+(calc '(mul (add 1 -2) (pow 2 7))) => ("invalid operator" pow)
+```
+
+上面的代码使用了`case`表达式来区分运算符的类型。
+`case`表达式和`cond`表达式类似，区别在于`case`表达式的条件判断语句总是相同的：`(memv val (key ...))`。
+其中`val`是`case`表达式的第一个子项，`(key ...)`是每个条件分支的第一项。
+上面的代码中的`case`语句可被改写为下面的`cond`语句：
+
+```scheme
+(let ([temp op])
+    (case op
+        [(memv temp '(add)) (apply-op ek + args)]
+        [(memv temp '(sub)) (apply-op ek - args)]
+        [(memv temp '(mul)) (apply-op ek * args)]
+        [(memv temp '(div)) (apply-op ek / args)]
+        [else (complain ek "invalid operator" op)]))
+```
+
 ## [习题及解答](https://github.com/jack-ji/scheme-ex/blob/master/tspl/3.ss)
