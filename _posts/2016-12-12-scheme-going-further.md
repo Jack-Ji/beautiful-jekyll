@@ -872,7 +872,7 @@ expr2
         (lambda (ek expr)
             (cond
                 [(number? expr) expr]
-                [(and (list? expr) (= length (expr) 3))
+                [(and (list? expr) (= (length expr) 3))
                  (let ([op (car expr)] [args (cdr expr)])
                     (case op
                         [(add) (apply-op ek + args)]
