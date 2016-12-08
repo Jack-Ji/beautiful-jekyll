@@ -915,4 +915,82 @@ expr2
         [else (complain ek "invalid operator" op)]))
 ```
 
+## 库
+
+在上一小节的末尾，我们介绍了一种通过`内部定义`和`顶层定义`实现软件模块的方法。
+很遗憾，这种方法存在以下缺点：
+
+* 该方法不可移植，因为R6RS没有规定`顶层定义`的行为；
+* 使用赋值操作可能会导致编译器无法有效进行代码优化，并且代码可读性也会降低；
+* 不支持关键字绑定（参见下文）； 
+
+R6RS标准为我们引入了新的软件模块定义方法，也就是库。
+库技术不存在上述的缺点，我们可以很方便的用其来封装软件模块。
+
+库可对外暴露一些标识符，这些标识符不光可能是变量，也可能是关键字。
+下面的示例代码就使用库技术对外暴露了两种不同类型的标识符：变量`gpa->grade`和关键字`gpa`。
+`gpa->grade`被绑定至了一个函数，其功能是根据平均分计算成绩等级。
+`gpa`实际上是个语法扩展，其功能是根据成绩等级计算平均分。
+
+```scheme
+(library (grades)
+    (export gpa->grade gpa)
+    (import (rnrs))
+
+    (define in-range?
+        (lambda (x n y)
+            (and (>= n x) (< n y))))
+
+    (define-syntax range-case
+        (syntax-rules (- else)
+            [(_ expr ((x - y) e1 e2 ...) ... [else ee1 ee2 ...])
+             (let ([tmp expr])
+                (cond
+                    [(in-range? x tmp y) e1 e2 ...]
+                    ...
+                    [else ee1 ee2 ...]))]
+            [(_ expr ((x - y) e1 e2 ...) ...)
+             (let ([tmp expr])
+                (cond
+                    [(in-range? x tmp y) e1 e2 ...]
+                    ...))]))
+    (define letter->number
+        (lambda (x)
+            (case x
+                [(a) 4.0]
+                [(b) 3.0]
+                [(c) 2.0]
+                [(d) 1.0]
+                [(f) 0.0]
+                [else (assertion-violation 'grade "invalid letter grade" x)])))
+
+    (define gpa->grade
+        (lambda (x)
+            (range-case x
+                [(0.0 - 0.5) 'f]
+                [(0.5 - 1.5) 'd]
+                [(1.5 - 2.5) 'c]
+                [(2.5 - 3.5) 'b]
+                [else 'a])))
+
+    (define-syntax gpa
+        (syntax-rules ()
+            [(_ g1 g2 ...)
+             (let ([ls (map letter->number '(g1 g2 ...))])
+                (/ (apply + ls) (length ls)))])))
+```
+
+以上示例库的名称为`(grades)`，也许看起来很怪，但事实是Scheme中的库名称都采用了用圆括号包围的形式。
+上面的库还导入了标准库`(rnrs)`，该库定义并导出了Scheme的大部分标准函数和关键字。
+
+除了`gpa->grade`和`gpa`以外，上面的库还定义了一些内部使用的语法扩展和函数，它们都是对外不可见的。
+
+```scheme
+(import (grades))
+(gpa c a c b b) => 2.8
+(gpa->grades 2.8) => b
+```
+
+我们将在第10章进一步深入研究库相关的技术。
+
 ## [习题及解答](https://github.com/jack-ji/scheme-ex/blob/master/tspl/3.ss)
