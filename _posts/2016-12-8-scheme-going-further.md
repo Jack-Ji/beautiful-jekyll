@@ -551,7 +551,7 @@ Scheme在对表达式`(if (null? x) (quote ()) (cdr x))`求值时需要完成下
                     (cond
                         [(null? ls) 1]
                         [(= (car ls) 0) (break 0)]
-                        [else (* car ls) (f (cdr ls))]))))))
+                        [else (* (car ls) (f (cdr ls)))]))))))
 
 (product '(1 2 3 4 5)) => 120
 (product '(7 3 8 0 1 9 5)) => 0
