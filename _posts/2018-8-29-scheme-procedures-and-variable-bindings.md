@@ -99,8 +99,91 @@ list => #<procedure>
 
 ## case-lambda
 
+如前所述，`lambda`表达式创建的子程序只支持两种参数风格：固定长度的参数列表和大于等于某个长度的参数列表。
+
+```scheme
+(lambda (var1 ... varn) body1 body2 ...)
+```
+
+以上形式的`lambda`表达式只接受`n`个参数。
+
+```scheme
+(lambda (var1 ... varn . r) body1 body2 ...)
+```
+
+以上形式的`lambda`表达式可接受大于等于`n`个参数。
+
+由此可见，`lambda`表达式灵活性相对有限（仅就参数列表这一点来讲），现代编程语言中常出现的参数默认值也没有被直接支持。
+显而易见，通过对以上第二种形式的`lambda`表达式的入参进行分析，结合参数列表的长度检查和`car`、`cdr`函数，我们还是能够
+实现参数默认值的，代价是更为晦涩的代码和性能的降低。
+
+`case-lambda`语法表达式就是为针对这种情况而引入的语法扩展。
+
 ```
 语法：(case-lambda clause ...)
 返回：子程序
 库：(rnrs control), (rnrs)
 ```
+
+`case-lambda`由多个`cluase`组成，每个`clause`的定义形式如下：
+
+```scheme
+[formals body1 body2 ...]
+```
+
+上面的`formals`部分的含义和`lambda`表达式中的形参部分一模一样，它表示了当前函数所能接受的其中一种参数风格，多个`clause`组合起来
+为函数提供了多种风格的参数列表和对应的函数体。
+
+当`case-lambda`定义的函数被调用时，`scheme`会对所有的`clause`进行逐个分析，当遇到第一个能够接受当前参数的`clause`时，该`clause`的
+`formals`中的所有形参被绑定至对应的实参，然后再对对应的函数体进行求值。如果没有任何`clause`能够和实参匹配成功，`scheme`会抛出异常
+`&assertion`。
+
+下面的函数`make-list`就是用`case-lambda`定义的，调用方不输入初始值的情况下，`make-list`默认将`#f`作为初始值：
+
+```scheme
+(define make-list
+  (case-lambda
+    [(n) (make-list n #f)]
+    [(n x)
+      (do ([n n (- n 1)] [ls '() (cons x ls)])
+        ((zero? n) ls))]))
+```
+
+函数`substring`可通过`case-lambda`将`end`参数变为可选项，默认不输入表示字符串的结尾，
+也可以`start`和`end`参数都不输入，这时`substring`的功能和`string-copy`一模一样：
+
+```scheme
+(define substring1
+  (case-lambda
+    [(s) (substring1 s 0 (string-length s))]
+    [(s start) (substring1 s start (string-layout s))]
+    [(s start end) (substring s start end)]))
+```
+
+还可以在只有一个参数时将`start`默认为字符串起始位置：
+
+```scheme
+(define substring2
+  (case-lambda
+    [(s) (substring2 s 0 (string-length s))]
+    [(s end) (substring2 s 0 end)]
+    [(s start end) (substring s start end)]))
+```
+
+我们甚至可以让`start`和`end`参数要么同时出现，要么都使用默认值：
+
+```scheme
+(define substring3
+  (case-lambda
+    [(s) (substring3 s 0 (string-length s))]
+    [(s start end) (substring s start end)]))
+```
+
+## 本地绑定
+
+```
+语法：(let ((var expr) ...) body1 body2 ...)
+返回：绑定语句块的最后一个表达式的求值结果
+库：(rnrs base), (rnrs)
+```
+
