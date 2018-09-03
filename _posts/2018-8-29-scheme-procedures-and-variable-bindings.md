@@ -187,3 +187,148 @@ list => #<procedure>
 库：(rnrs base), (rnrs)
 ```
 
+`let`表达式被用于创建本地绑定，绑定语句中的每个`var`标识符均被绑定至对应的`expr`的求值结果。
+`let`的语句部分（body1 body2 ...）的求值方式跟`lambda`的函数体部分一样。
+
+`let`还有其它几种功能相近的“近亲”表达式：`let*`、`letrec`和`letrec*`。
+`let`与`let*`、`letrec`、`letrec*`的不同之处在于绑定语句的求值表达式`expr`无法使用任何被绑定的变量`var`。
+`let`与`let*`、`letrec*`的不同之处在于每个`var`的绑定顺序是不可预知。
+
+```scheme
+(let ([x (* 3.0 3.0)] [y (* 4.0 4.0)])
+  (sqrt (+ x y))) => 5.0
+
+(let ([x 'a] [y '(b c)])
+  (cons x y)) => (a b c)
+
+(let ([x 0] [y 1])
+  (let ([x y] [y x])
+    (list x y))) => (1 0)
+```
+
+下面的代码利用`lambda`将`let`表达式定义为语法扩展：
+
+```scheme
+(define-syntax let
+  (syntax-rules ()
+    [(_ ((x e) ...) b1 b2 ...)
+      ((lambda (x ...) b1 b2 ...) e ...)]))
+```
+
+带命名的`let`表达式将会在`5.4`节中再描述。
+
+```
+语法：(let* ((var expr) ...) body1 body2 ...)
+返回：绑定语句块的最后一个表达式的求值结果
+库：(rnrs base), (rnrs)
+```
+
+`let*`的作用与`let`类似，区别在与`let*`的绑定语句的求值顺序是固定的从左至右。
+因此，当绑定语句的求值顺序对最终的求值结果有影响时，可以使用`let*`保证绑定语句的执行顺序。
+
+```scheme
+(let* ([x (* 5.0 5.0)]
+       [y (- x (* 4.0 4.0))])
+  (sqrt y)) => 3.0
+
+(let ([x 0] [y 1])
+  (let* ([x y] [y x])
+    (list x y))) => (1 1)
+```
+
+任何`let*`表达式均可被转换为多层嵌套的`let`表达式，具体如下：
+
+
+```scheme
+(define-syntax let*
+  (syntax-rules ()
+    [(_ () e1 e2 ...)
+      (let () e1 e2 ...)]
+    [(_ ((x1 v1) (x2 v2) ...) e1 e2 ...)
+      (let ((x1 v1))
+        (let* ((x2 v2) ...) e1 e2 ...))]))
+```
+
+```
+语法：(letrec ((var expr) ...) body1 body2 ...)
+返回：绑定语句块的最后一个表达式的求值结果
+库：(rnrs base), (rnrs)
+```
+
+`letrec`的作用和`let`、`let*`类似，区别是`letrec`的绑定语句的表达式可任意访问其它绑定变量`var`。
+因此`letrec`可被用于定义多个互相调用的递归函数。
+
+```scheme
+(letrec ([sum (lambda (x)
+                (if (zero? x)
+                    0
+                    (+ x (sum (- x 1)))))])
+  (sum 5)) => 15
+```
+
+由于`letrec`的绑定语句的执行顺序是不确定的，在绑定语句块结束前不能对绑定变量进行求值，否则`scheme`会抛出`&assertion`异常。
+（注意，定义`lambda`语句时不会对其中出现的外部变量马上进行求值，而是等到之后函数被调用时才会进行求值）。
+
+当绑定变量之间有依赖，并且其求值顺序无所谓时，优先选择`letrec`表达式。
+当绑定变量之间有依赖，并且其求值顺序需要从左至右依次执行时，优先选择`letrec*`表达式。
+
+形如`(letrec ((var expr) ...) body1 body2 ...)`的`letrec`表达式可通过`let`和`set!`来定义：
+
+```scheme
+(let ((var #f) ...)
+  (let ((temp expr) ...)
+    (set! var temp)
+    ...
+    (let ()
+      body1 body2 ...)))
+```
+
+上面的`temp ...`是一组新的变量，每个`var`变量都存在一个对应的`temp`变量。
+最外层的`let`语句首先创建所有的`var`变量，初始值在这时并不重要，因此全部初始为`#f`。
+这样做的目的是为了保证变量`var ...`可以在后面的`expr ...`语句中出现。
+中间的`let`语句对`expr ...`进行求值，并且将求值结果绑定至每个对应的`temp`变量。
+最内层又加了一个`let`语句是为了应对`body1 body2 ...`包含内部定义的情况（还记得吗，内部定义只能出现在语句块的首部）。
+
+```
+语法：(letrec* ((var expr) ...) body1 body2 ...)
+返回：绑定语句块的最后一个表达式的求值结果
+库：(rnrs base), (rnrs)
+```
+
+`letrec*`的作用和`letrec`同样类似，区别是`letrec*`对`expr ...`的求值严格按照从左至右的顺序进行。
+因此，`letrec*`中后面的绑定语句可以正常对前面出现的绑定变量进行求值计算。
+
+形如`(letrec* ((var expr) ...) body1 body2 ...)`的`letrec`表达式同样可通过`let`和`set!`来定义：
+
+
+```scheme
+(let ((var #f) ...)
+  (set! var expr) ...
+  (let () body1 body2 ...))
+```
+
+最外层的`let`表达式创建了`var ...`变量，然后依次对每个`expr`进行求值后再赋给对应的`var`变量。
+最后，使用`let`而不是`begin`语句来封装`body1 body2 ...`的原因同样是为了应对`body1 body2 ...`包含内部定义的情况。
+
+
+```scheme
+(letrec* ([sum (lambda (x)
+                 (if (zero? x)
+                     0
+                     (+ x (sum (- x 1)))))]
+          [f (lambda () (cons n n-sum))]
+          [n 15]
+          [n-sum (sum n)])
+  (f)) => (15 . 120)
+
+(letrec* ([f (lambda () (lambda () g))]
+          [g (f)])
+  (eq? (g) g)) => #t
+
+(letrec* ([g (f)]
+          [f (lambda () (lambda () g))])
+  (eq? (g) g)) => exception: attempt to reference undefined variable f
+```
+
+## 多变量绑定
+
